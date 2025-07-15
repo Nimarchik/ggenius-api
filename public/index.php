@@ -1,13 +1,12 @@
 <?php
 header("Content-Type: application/json");
 $allowedOrigins = [
+  'https://ggenius.gg',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://ggenius.gg',
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-
 if (in_array($origin, $allowedOrigins)) {
   header("Access-Control-Allow-Origin: $origin");
   header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
@@ -19,9 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit();
 }
 
-
 $apiUrl = 'https://mapi.mobilelegends.com/hero/list';
-
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $apiUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -33,5 +30,4 @@ if (curl_errno($ch)) {
   exit();
 }
 curl_close($ch);
-
 echo $response;
