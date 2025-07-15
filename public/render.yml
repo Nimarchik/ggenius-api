@@ -1,8 +1,7 @@
 services:
   - type: web
     name: ggenius-api
-    env: php
+    env: docker
     plan: free
-    rootDir: public
-    buildCommand: ""
-    startCommand: ""
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
