@@ -3,5 +3,6 @@ services:
     name: ggenius-api
     env: php
     plan: free
+    rootDir: public
     buildCommand: ""
     startCommand: ""
