@@ -6,7 +6,7 @@ if (!is_dir($uploadDir)) {
   mkdir($uploadDir, 0755, true);
 }
 
-$dataFile = __DIR__ . '/blog.json';
+$dataFile = '/tmp/blog.json';
 
 // Завантажуємо існуючі блоги
 $blogs = file_exists($dataFile) ? json_decode(file_get_contents($dataFile), true) : [];
