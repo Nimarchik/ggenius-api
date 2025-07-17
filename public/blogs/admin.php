@@ -5,11 +5,16 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
+require __DIR__ . '/vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
 // *** Авторизация ***
-$adminPassword = 'BugaevGG'; // ЗАДАЙ СВОЙ ПАРОЛЬ
+$adminPasswordHash = $_ENV['ADMIN_PASSWORD_HASH'];
 
 if (isset($_POST['login'])) {
-  if ($_POST['password'] === $adminPassword) {
+  if ($_POST['password'] === $adminPasswordHash) {
     $_SESSION['admin_logged_in'] = true;
     header("Location: admin.php");
     exit;
@@ -65,27 +70,28 @@ if (!isset($_SESSION['admin_logged_in'])) {
   exit;
 }
 
-require 'vendor/autoload.php'; // Cloudinary SDK
-
 use Cloudinary\Configuration\Configuration;
 use Cloudinary\Api\Upload\UploadApi;
 
+$cloudName = $_ENV['CLOUDINARY_CLOUD_NAME'];
+$apiKey = $_ENV['CLOUDINARY_API_KEY'];
+$apiSecret = $_ENV['CLOUDINARY_API_SECRET'];
 // Cloudinary config
 Configuration::instance([
   'cloud' => [
-    'cloud_name' => 'de188rl3r',
-    'api_key'    => '174991992197999',
-    'api_secret' => 'Ixsq6t8CE8DSKTToUrFov61vIoA',
+    'cloud_name' => $cloudName,
+    'api_key'    => $apiKey,
+    'api_secret' => $apiSecret,
   ],
   'url' => ['secure' => true]
 ]);
 
 // DB config
-$host = 'dpg-d1sg7cre5dus739m5m90-a';
-$db   = 'ggenius';
-$user = 'ggenius_user';
-$pass = 'lJrMaovTX0QjiECpBXnnZwyNN9URPHpa';
-$port = 5432;
+$host = $_ENV['DB_HOST'];
+$db   = $_ENV['DB_NAME'];
+$user = $_ENV['DB_USER'];
+$pass = $_ENV['DB_PASS'];
+$port = $_ENV['DB_PORT'];
 
 try {
   $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$db", $user, $pass);
