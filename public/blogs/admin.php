@@ -5,24 +5,82 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
 
-require 'vendor/autoload.php'; // подключение Cloudinary SDK
+// *** Авторизация ***
+$adminPassword = 'BugaevGG'; // ЗАДАЙ СВОЙ ПАРОЛЬ
+
+if (isset($_POST['login'])) {
+  if ($_POST['password'] === $adminPassword) {
+    $_SESSION['admin_logged_in'] = true;
+    header("Location: admin.php");
+    exit;
+  } else {
+    $login_error = "Невірний пароль!";
+  }
+}
+
+if (isset($_GET['logout'])) {
+  session_destroy();
+  header("Location: admin.php");
+  exit;
+}
+
+if (!isset($_SESSION['admin_logged_in'])) {
+?>
+  <!DOCTYPE html>
+  <html lang="uk">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Вхід в адмінку</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Вхід в адмінку</h2>
+    <?php if (isset($login_error)): ?>
+      <p style="color:red"><?= $login_error ?></p>
+    <?php endif; ?>
+    <form method="POST">
+      <input type="password" name="password" placeholder="Пароль" required>
+      <button type="submit" name="login">Увійти</button>
+    </form>
+  </body>
+
+  </html>
+<?php
+  exit;
+}
+
+require 'vendor/autoload.php'; // Cloudinary SDK
 
 use Cloudinary\Configuration\Configuration;
 use Cloudinary\Api\Upload\UploadApi;
 
-// *** Настройки Cloudinary ***
+// Cloudinary config
 Configuration::instance([
   'cloud' => [
-    'cloud_name' => 'de188rl3r', // Заменить
-    'api_key'    => '174991992197999',    // Заменить
-    'api_secret' => 'Ixsq6t8CE8DSKTToUrFov61vIoA', // Заменить
+    'cloud_name' => 'de188rl3r',
+    'api_key'    => '174991992197999',
+    'api_secret' => 'Ixsq6t8CE8DSKTToUrFov61vIoA',
   ],
-  'url' => [
-    'secure' => true
-  ]
+  'url' => ['secure' => true]
 ]);
 
-// *** Настройки базы данных ***
+// DB config
 $host = 'dpg-d1sg7cre5dus739m5m90-a';
 $db   = 'ggenius';
 $user = 'ggenius_user';
@@ -36,7 +94,7 @@ try {
   die("Помилка підключення до бази: " . $e->getMessage());
 }
 
-// Удаление поста
+// Delete post
 if (isset($_GET['delete'])) {
   $id = intval($_GET['delete']);
   $pdo->prepare("DELETE FROM blogs WHERE id = ?")->execute([$id]);
@@ -44,7 +102,7 @@ if (isset($_GET['delete'])) {
   exit;
 }
 
-// Обновление поста
+// Update post
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_id'])) {
   $id = intval($_POST['update_id']);
   $title = $_POST['title'] ?? '';
@@ -58,11 +116,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_id'])) {
       $upload = (new UploadApi())->upload($tmpPath, [
         'folder' => 'ggenius_blog',
         'overwrite' => true,
-        'public_id' => pathinfo($imageUrl, PATHINFO_FILENAME) // перезаписуємо старе
+        'public_id' => pathinfo($imageUrl, PATHINFO_FILENAME)
       ]);
       $imageUrl = $upload['secure_url'];
     } catch (Exception $e) {
-      // Ошибка загрузки — можно обработать, но пока пропустим
     }
   }
 
@@ -72,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_id'])) {
   exit;
 }
 
-// Добавление нового поста
+// Add new post
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['update_id'])) {
   $title = $_POST['title'] ?? '';
   $content = $_POST['content'] ?? '';
@@ -87,7 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['update_id'])) {
       ]);
       $imageUrl = $upload['secure_url'];
     } catch (Exception $e) {
-      // Ошибка загрузки — можно обработать, но пока пропустим
     }
   }
 
@@ -97,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['update_id'])) {
   exit;
 }
 
-// Получение поста для редактирования
+// Fetch post for edit
 $editPost = null;
 if (isset($_GET['edit'])) {
   $id = intval($_GET['edit']);
@@ -106,7 +162,7 @@ if (isset($_GET['edit'])) {
   $editPost = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Получение всех постов
+// Fetch all posts
 $stmt = $pdo->query("SELECT * FROM blogs ORDER BY id DESC");
 $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -116,7 +172,7 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <head>
   <meta charset="UTF-8">
-  <title>Адмінка блогу з Cloudinary</title>
+  <title>Адмінка блогу</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -157,10 +213,18 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
       text-decoration: none;
       color: blue;
     }
+
+    .logout {
+      float: right;
+    }
   </style>
 </head>
 
 <body>
+
+  <div class="logout">
+    <a href="admin.php?logout=1">🚪 Вийти</a>
+  </div>
 
   <h1><?= $editPost ? "Редагувати статтю" : "Додати статтю" ?></h1>
   <form action="admin.php" method="POST" enctype="multipart/form-data">
