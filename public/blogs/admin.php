@@ -23,6 +23,8 @@ if (isset($_POST['login'])) {
   }
 }
 
+
+
 if (isset($_GET['logout'])) {
   session_destroy();
   header("Location: admin.php");
