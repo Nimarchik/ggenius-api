@@ -12,6 +12,8 @@ if (in_array($origin, $allowedOrigins)) {
   header("Access-Control-Allow-Origin: $origin");
   header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
   header("Access-Control-Allow-Headers: Content-Type, Authorization");
+  header("Access-Control-Allow-Credentials: true");
+  header("Access-Control-Max-Age: 86400");
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -21,9 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $deeplKey = "fd8f8e9d-389b-4d21-923c-fd4b6da1160e:fx";
 
-$data = json_decode(file_get_contents("php://input"), true);
-$text = $data["text"] ?? '';
-$lang = strtoupper($data["lang"] ?? 'EN');
+// Берём параметры из $_POST, так как Content-Type: application/x-www-form-urlencoded
+$text = $_POST['text'] ?? '';
+$lang = strtoupper($_POST['target_lang'] ?? 'EN');
 
 $ch = curl_init();
 
