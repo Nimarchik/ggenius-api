@@ -233,15 +233,25 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     @media screen and (max-width: 540px) {
       body {
-
         max-width: 360px;
+        width: 100%;
         margin: auto;
         padding: 20px;
       }
 
       form {
-        width: 100%;
+        width: 360px;
 
+      }
+
+      h1,h2,h3,h4,h5,h6 {
+        width: 100%;
+      }
+      p {
+        width: 360px;
+      }
+      div {
+        width: 360px;
       }
 
       label {
