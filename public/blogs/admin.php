@@ -165,6 +165,8 @@ if (isset($_GET['edit'])) {
 // Fetch all posts
 $stmt = $pdo->query("SELECT * FROM blogs ORDER BY id DESC");
 $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$content = nl2br(htmlspecialchars($row['content']));
+
 ?>
 
 <!DOCTYPE html>
