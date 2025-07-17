@@ -27,7 +27,7 @@ $deeplKey = "fd8f8e9d-389b-4d21-923c-fd4b6da1160e:fx";
 $data = json_decode(file_get_contents('php://input'), true);
 
 $text = $data['text'] ?? '';
-$lang = strtoupper($data['lang'] ?? 'EN');
+$lang = strtoupper($data['target_lang'] ?? 'EN');
 
 $ch = curl_init();
 
