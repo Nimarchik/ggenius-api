@@ -1,6 +1,5 @@
 <?php
-header('Content-Type: application/json');
-
+header("Content-Type: application/json");
 $allowedOrigins = [
   'https://ggenius.gg',
   'http://localhost:5173',
@@ -19,5 +18,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit();
 }
 
-$blogs = json_decode(file_get_contents(__DIR__ . './blog.json'), true);
-echo json_encode($blogs);
+
+$host = 'dpg-d1sg7cre5dus739m5m90-a';
+$db   = 'ggenius';
+$user = 'ggenius_user';
+$pass = 'lJrMaovTX0QjiECpBXnnZwyNN9URPHpa';
+$port = 5432;
+
+try {
+  $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$db", $user, $pass, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+  ]);
+
+  $stmt = $pdo->query("SELECT * FROM blogs ORDER BY id DESC");
+  $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+  echo json_encode($blogs, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+} catch (PDOException $e) {
+  http_response_code(500);
+  echo json_encode(["error" => "Помилка з'єднання: " . $e->getMessage()]);
+}

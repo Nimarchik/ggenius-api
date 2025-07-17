@@ -1,16 +1,50 @@
 <?php
-// admin.php
+// Конфіг бази
+$host = 'dpg-d1sg7cre5dus739m5m90-a';
+$db   = 'ggenius';
+$user = 'ggenius_user';
+$pass = 'lJrMaovTX0QjiECpBXnnZwyNN9URPHpa';
+$port = 5432;
+
+
+try {
+  $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$db", $user, $pass, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+  ]);
+} catch (PDOException $e) {
+  die("Помилка підключення до бази: " . $e->getMessage());
+}
+
+// Створюємо таблицю blogs, якщо ще нема
+$pdo->exec("CREATE TABLE IF NOT EXISTS blogs (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  date DATE NOT NULL,
+  image TEXT
+)");
+
 $uploadDir = '/tmp/uploads/';
-// Створюємо папку для завантажень, якщо нема
 if (!is_dir($uploadDir)) {
   mkdir($uploadDir, 0755, true);
 }
 
-$dataFile = '/tmp/blog.json';
+// Показ зображень через параметр ?image=...
+if (isset($_GET['image'])) {
+  $imgFile = basename($_GET['image']);
+  $path = $uploadDir . $imgFile;
+  if (file_exists($path)) {
+    header('Content-Type: ' . mime_content_type($path));
+    readfile($path);
+    exit;
+  } else {
+    http_response_code(404);
+    echo "Зображення не знайдено.";
+    exit;
+  }
+}
 
-// Завантажуємо існуючі блоги
-$blogs = file_exists($dataFile) ? json_decode(file_get_contents($dataFile), true) : [];
-
+// Обробка форми
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $title = $_POST['title'] ?? '';
   $content = $_POST['content'] ?? '';
@@ -23,32 +57,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $destination = $uploadDir . $filename;
 
     if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
-      // Зберігаємо шлях до файлу для внутрішнього використання
       $imagePath = $filename;
-    } else {
-      // Помилка при завантаженні файлу
-      $imagePath = '';
     }
   }
 
-  $newBlog = [
-    'id' => time(),
-    'title' => $title,
-    'content' => $content,
-    'date' => $date,
-    'image' => $imagePath
-  ];
-
-  $blogs[] = $newBlog;
-
-  // Записуємо назад у JSON
-  file_put_contents($dataFile, json_encode($blogs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+  $stmt = $pdo->prepare("INSERT INTO blogs (title, content, date, image) VALUES (?, ?, ?, ?)");
+  $stmt->execute([$title, $content, $date, $imagePath]);
 
   header("Location: admin.php");
   exit;
 }
-?>
 
+// Отримати всі статті
+$blogs = $pdo->query("SELECT * FROM blogs ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+?>
 
 <!DOCTYPE html>
 <html lang="uk">
@@ -105,10 +127,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <hr>
   <h2>Існуючі статті</h2>
-  <?php foreach (array_reverse($blogs) as $b): ?>
+  <?php foreach ($blogs as $b): ?>
     <div class="blog">
       <?php if ($b['image']): ?>
-        <img src="<?= htmlspecialchars($b['image']) ?>" alt="">
+        <img src="admin.php?image=<?= urlencode($b['image']) ?>" alt="">
       <?php endif; ?>
       <strong><?= htmlspecialchars($b['title']) ?></strong><br>
       <small><?= htmlspecialchars($b['date']) ?></small>
