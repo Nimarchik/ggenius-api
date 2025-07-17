@@ -12,7 +12,8 @@ $user = 'ggenius_user';
 $pass = 'lJrMaovTX0QjiECpBXnnZwyNN9URPHpa';
 $port = 5432;
 
-$uploadDir = __DIR__ . '/uploads/';
+$uploadDir = sys_get_temp_dir() . '/uploads/';
+
 if (!is_dir($uploadDir)) {
   mkdir($uploadDir, 0777, true);
 }
