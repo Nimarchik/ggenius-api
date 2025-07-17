@@ -73,5 +73,5 @@ if (!isset($_SESSION['admin_logged_in'])):
   </html>
 
 <?php
-  exit;
 endif;
+exit;
