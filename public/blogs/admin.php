@@ -16,7 +16,7 @@ if (file_exists(__DIR__ . '/.env')) {
 $adminPasswordHash = password_hash($_ENV['ADMIN_PASSWORD_HASH'], PASSWORD_DEFAULT);
 
 if (isset($_POST['login'])) {
-  if ($_POST['password'] === $adminPasswordHash) {
+  if (password_verify($_POST['password'], $adminPasswordHash)) {
     $_SESSION['admin_logged_in'] = true;
     header("Location: admin.php");
     exit;
