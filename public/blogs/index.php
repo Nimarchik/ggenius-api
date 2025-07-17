@@ -19,5 +19,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit();
 }
 
-$blogs = json_decode(file_get_contents(__DIR__ . '/../data/blogs.json'), true);
+$blogs = json_decode(file_get_contents(__DIR__ . './blog.json'), true);
 echo json_encode($blogs);
