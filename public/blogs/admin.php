@@ -1,10 +1,14 @@
 <?php
 // admin.php
-$uploadDir = __DIR__ . '/uploads/';
-$dataFile = __DIR__ . './blog.json';
+$uploadDir = '/tmp/uploads/';
+// Створюємо папку для завантажень, якщо нема
+if (!is_dir($uploadDir)) {
+  mkdir($uploadDir, 0755, true);
+}
 
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+$dataFile = __DIR__ . '/blog.json';
 
+// Завантажуємо існуючі блоги
 $blogs = file_exists($dataFile) ? json_decode(file_get_contents($dataFile), true) : [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -17,8 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
     $filename = uniqid() . '.' . $ext;
     $destination = $uploadDir . $filename;
-    move_uploaded_file($_FILES['image']['tmp_name'], $destination);
-    $imagePath = 'uploads/' . $filename;
+
+    if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
+      // Зберігаємо шлях до файлу для внутрішнього використання
+      $imagePath = $filename;
+    } else {
+      // Помилка при завантаженні файлу
+      $imagePath = '';
+    }
   }
 
   $newBlog = [
@@ -28,12 +38,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'date' => $date,
     'image' => $imagePath
   ];
+
   $blogs[] = $newBlog;
+
+  // Записуємо назад у JSON
   file_put_contents($dataFile, json_encode($blogs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
   header("Location: admin.php");
   exit;
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="uk">
