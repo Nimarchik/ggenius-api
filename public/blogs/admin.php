@@ -244,12 +244,19 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       }
 
-      h1,h2,h3,h4,h5,h6 {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
         width: 100%;
       }
+
       p {
         width: 360px;
       }
+
       div {
         width: 360px;
       }
