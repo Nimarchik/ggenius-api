@@ -13,7 +13,7 @@ if (file_exists(__DIR__ . '/.env')) {
 }
 
 // *** Авторизация ***
-$adminPasswordHash = $_ENV['ADMIN_PASSWORD_HASH'];
+$adminPasswordHash = password_hash($_ENV['ADMIN_PASSWORD_HASH'], PASSWORD_DEFAULT);
 
 if (isset($_POST['login'])) {
   if ($_POST['password'] === $adminPasswordHash) {
