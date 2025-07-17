@@ -23,9 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $deeplKey = "fd8f8e9d-389b-4d21-923c-fd4b6da1160e:fx";
 
-// Берём параметры из $_POST, так как Content-Type: application/x-www-form-urlencoded
-$text = $_POST['text'] ?? '';
-$lang = strtoupper($_POST['target_lang'] ?? 'EN');
+// Получаем тело запроса как JSON
+$data = json_decode(file_get_contents('php://input'), true);
+
+$text = $data['text'] ?? '';
+$lang = strtoupper($data['lang'] ?? 'EN');
 
 $ch = curl_init();
 
