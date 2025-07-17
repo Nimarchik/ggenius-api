@@ -246,17 +246,17 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       label {
 
-        width: 100%;
+        width: 360px;
 
       }
 
       input,
       textarea {
-        width: 100%;
+        width: 360px;
       }
 
       .blog {
-        width: 100%;
+        width: 360px;
       }
 
       .actions a {
