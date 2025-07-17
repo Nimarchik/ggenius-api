@@ -192,11 +192,13 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     form {
+      width: 100%;
       margin-bottom: 40px;
     }
 
     label {
       display: block;
+      width: 100%;
       margin-top: 10px;
     }
 
@@ -213,6 +215,7 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     .blog {
+      width: 100%;
       border: 1px solid #ccc;
       padding: 10px;
       margin-bottom: 10px;
