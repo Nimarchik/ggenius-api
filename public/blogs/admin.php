@@ -230,6 +230,41 @@ $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .logout {
       float: right;
     }
+
+    @media screen and (max-width: 540px) {
+      body {
+
+        max-width: 360px;
+        margin: auto;
+        padding: 20px;
+      }
+
+      form {
+        width: 100%;
+
+      }
+
+      label {
+
+        width: 100%;
+
+      }
+
+      input,
+      textarea {
+        width: 100%;
+      }
+
+      .blog {
+        width: 100%;
+      }
+
+      .actions a {
+        margin-right: 10px;
+        text-decoration: none;
+        color: blue;
+      }
+    }
   </style>
 </head>
 
