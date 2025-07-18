@@ -1,6 +1,7 @@
 <?php
-header("Content-Type: application/json");
+header("Content-Type: application/json; charset=utf-8");
 
+// Разрешённые источники
 $allowedOrigins = [
   'https://ggenius.gg',
   'http://localhost:5173',
@@ -23,19 +24,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $deeplKey = "fd8f8e9d-389b-4d21-923c-fd4b6da1160e:fx";
 
-// ✅ Получаем и логируем тело запроса
+// Логирование запроса
 $raw = file_get_contents('php://input');
 file_put_contents('deepl-log.txt', "--- RAW INPUT ---\n$raw\n", FILE_APPEND);
 
 $data = json_decode($raw, true);
-file_put_contents('deepl-log.txt', "--- PARSED JSON ---\n" . json_encode($data) . "\n", FILE_APPEND);
+file_put_contents('deepl-log.txt', "--- PARSED JSON ---\n" . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
 
 $text = $data['text'] ?? '';
 $lang = strtoupper($data['target_lang'] ?? 'EN');
 
-// Запрос к DeepL
+// Подготовка запроса к DeepL
 $ch = curl_init();
-
 curl_setopt($ch, CURLOPT_URL, "https://api-free.deepl.com/v2/translate");
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -51,10 +51,23 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
 ]));
 
 $response = curl_exec($ch);
+
+// Получаем кодировку ответа
+$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 curl_close($ch);
 
-// Логируем ответ от DeepL
+// Определим кодировку
+$encoding = null;
+if (preg_match('/charset=([a-zA-Z0-9\-]+)/i', $contentType, $matches)) {
+  $encoding = strtoupper(trim($matches[1]));
+}
+
+if ($encoding && $encoding !== 'UTF-8') {
+  $response = mb_convert_encoding($response, 'UTF-8', $encoding);
+}
+
+// Лог DeepL-ответа
 file_put_contents('deepl-log.txt', "--- DeepL RESPONSE ---\n$response\n", FILE_APPEND);
 
-// Отдаём ответ клиенту
+// Вернём клиенту
 echo $response;
