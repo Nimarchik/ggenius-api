@@ -48,4 +48,6 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
 $response = curl_exec($ch);
 curl_close($ch);
 
+file_put_contents('deepl-log.txt', json_encode($data) . "\n", FILE_APPEND);
+file_put_contents('deepl-log.txt', $response . "\n", FILE_APPEND);
 echo $response;
