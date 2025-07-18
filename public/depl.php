@@ -23,12 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $deeplKey = "fd8f8e9d-389b-4d21-923c-fd4b6da1160e:fx";
 
-// Получаем тело запроса как JSON
-$data = json_decode(file_get_contents('php://input'), true);
+// ✅ Получаем и логируем тело запроса
+$raw = file_get_contents('php://input');
+file_put_contents('deepl-log.txt', "--- RAW INPUT ---\n$raw\n", FILE_APPEND);
+
+$data = json_decode($raw, true);
+file_put_contents('deepl-log.txt', "--- PARSED JSON ---\n" . json_encode($data) . "\n", FILE_APPEND);
 
 $text = $data['text'] ?? '';
 $lang = strtoupper($data['target_lang'] ?? 'EN');
 
+// Запрос к DeepL
 $ch = curl_init();
 
 curl_setopt($ch, CURLOPT_URL, "https://api-free.deepl.com/v2/translate");
@@ -48,6 +53,8 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
 $response = curl_exec($ch);
 curl_close($ch);
 
-file_put_contents('deepl-log.txt', json_encode($data) . "\n", FILE_APPEND);
-file_put_contents('deepl-log.txt', $response . "\n", FILE_APPEND);
+// Логируем ответ от DeepL
+file_put_contents('deepl-log.txt', "--- DeepL RESPONSE ---\n$response\n", FILE_APPEND);
+
+// Отдаём ответ клиенту
 echo $response;
