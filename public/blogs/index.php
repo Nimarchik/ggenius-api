@@ -19,11 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 
-$host = 'dpg-d1sg7cre5dus739m5m90-a';
-$db   = 'ggenius';
-$user = 'ggenius_user';
-$pass = 'lJrMaovTX0QjiECpBXnnZwyNN9URPHpa';
-$port = 5432;
+$host = $_ENV['DB_HOST'];
+$db   = $_ENV['DB_NAME'];
+$user = $_ENV['DB_USER'];
+$pass = $_ENV['DB_PASS'];
+$port = $_ENV['DB_PORT'];
 
 try {
   $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$db", $user, $pass, [
