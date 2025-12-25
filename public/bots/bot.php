@@ -16,7 +16,7 @@ if (in_array($origin, $allowedOrigins)) {
   header("Access-Control-Allow-Headers: Content-Type, Authorization");
 }
 $token = $_ENV['BOT_TOKEN'];
-$website_url = 'https://ggenius-api.onrender.com/bots/auth.php'; // Ссылка на обработчик
+$website_url = 'https://9ea98d3c1cae.ngrok-free.app/'; // Ссылка на обработчик
 
 $input = file_get_contents('php://input');
 $update = json_decode($input, true);
