@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 $allowedOrigins = [
   'http://localhost:5173',
   'https://9ea98d3c1cae.ngrok-free.app/',
+  'https://9ea98d3c1cae.ngrok-free.app',
   'https://ggenius.gg',
 ];
 
@@ -34,7 +35,7 @@ sort($data_check_arr);
 $data_check_string = implode("\n", $data_check_arr);
 
 // 2. Вычисляем секретный ключ на основе токена
-$secret_key = hash('sha256', true);
+$secret_key = hash('sha256', $_ENV['BOT_TOKEN'], true);
 
 // 3. Вычисляем проверочный хеш
 $hash = hash_hmac('sha256', $data_check_string, $secret_key);
