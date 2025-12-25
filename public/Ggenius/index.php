@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/.env';
+require_once __DIR__ . '/env.php';
 
 $dsn = sprintf(
   'pgsql:host=%s;port=%s;dbname=%s',
