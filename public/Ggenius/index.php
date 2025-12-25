@@ -4,7 +4,10 @@ $host = getenv('HOST_DB_GG');
 $port = getenv('PORT_DB_GG');
 $user = getenv('USER_DB_GG');
 $db   = getenv('NAME_DB_GG');
-$pass = getenv('PASS_DB_GG');
+// $pass = getenv('PASS_DB_GG');
+$pass = 'N01012026';
+
+
 
 if (!$host || !$db || !$user) {
   http_response_code(500);
