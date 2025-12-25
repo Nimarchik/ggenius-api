@@ -11,7 +11,7 @@ if (!$host || !$db || !$user) {
   die('ENV variables not found');
 }
 
-$dsn = "pgsql:host=$host;port=$port;dbname=$db";
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
 
 try {
   $pdo = new PDO($dsn, $user, $pass, [
