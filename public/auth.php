@@ -34,7 +34,7 @@ sort($data_check_arr);
 $data_check_string = implode("\n", $data_check_arr);
 
 // 2. Вычисляем секретный ключ на основе токена
-$secret_key = hash('sha256', BOT_TOKEN, true);
+$secret_key = hash('sha256', true);
 
 // 3. Вычисляем проверочный хеш
 $hash = hash_hmac('sha256', $data_check_string, $secret_key);
