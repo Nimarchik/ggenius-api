@@ -15,17 +15,17 @@ if (in_array($origin, $allowedOrigins)) {
 
 define($_ENV['BOT_TOKEN'], "BOT_TOKEN");
 
-// Данные от Telegram в этом случае приходят в $_GET
+$react_url = 'https://9ea98d3c1cae.ngrok-free.app/'; // Адрес вашего React-приложения
+
 $auth_data = $_GET;
 
 if (!isset($auth_data['hash'])) {
-  die('Ошибка: Данные не найдены');
+  die('Ошибка: Данные не получены');
 }
 
 $check_hash = $auth_data['hash'];
 unset($auth_data['hash']);
 
-// Проверка хеша (такая же, как раньше)
 $data_check_arr = [];
 foreach ($auth_data as $key => $value) {
   $data_check_arr[] = $key . '=' . $value;
@@ -37,16 +37,12 @@ $secret_key = hash('sha256', $_ENV['BOT_TOKEN'], true);
 $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
 if (strcmp($hash, $check_hash) === 0) {
-  // УСПЕХ!
-  // Теперь нам нужно перекинуть пользователя обратно на главную страницу React
-  // И передать данные (например, через сессию или временный токен)
+  // 1. Кодируем данные пользователя в JSON и Base64, чтобы безопасно передать в URL
+  $userData = base64_encode(json_encode($auth_data));
 
-  session_start();
-  $_SESSION['user'] = $auth_data;
-
-  // Редирект обратно на фронтенд (React)
-  header('Location: https://ваш-ngrok.ngrok-free.app/');
+  // 2. Перенаправляем обратно в React с параметром user
+  header("Location: $react_url?user=$userData");
   exit;
 } else {
-  die('Ошибка безопасности');
+  echo "Ошибка авторизации: подпись не верна.";
 }
