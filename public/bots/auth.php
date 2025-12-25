@@ -27,7 +27,7 @@ foreach ($lines as $line) {
 
 
 // 2. Получаем токен из окружения
-$token = $_ENV['BOT_TOKEN']  ?? '8550778477:AAEznwLjymXAQBLmSUG0yvKSrOMkdNEiOU8';
+$token = $_ENV['BOT_TOKEN'];
 
 if (!$token) {
   die('Ошибка: BOT_TOKEN не настроен в переменых окружения');

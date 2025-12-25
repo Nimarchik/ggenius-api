@@ -29,7 +29,7 @@ if (file_exists(__DIR__ . '/.env')) { // Укажите путь до вашег
 
 
 // Загрузка токена (убедитесь, что переменная окружения доступна)
-$token = $_ENV['BOT_TOKEN'] ?? '8550778477:AAEznwLjymXAQBLmSUG0yvKSrOMkdNEiOU8';
+$token = $_ENV['BOT_TOKEN'];
 
 // Ссылка на обработчик АВТОРИЗАЦИИ (не на сам bot.php)
 $website_url = 'https://6fbfdc3c2fdc.ngrok-free.app/auth.php';
