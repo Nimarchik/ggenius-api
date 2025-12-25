@@ -3,7 +3,9 @@ header("Content-Type: application/json");
 $allowedOrigins = [
   'http://localhost:5173',
   'https://9ea98d3c1cae.ngrok-free.app/',
-  'https://9ea98d3c1cae.ngrok-free.app'
+  'https://9ea98d3c1cae.ngrok-free.app',
+  'https://ggenius-api.onrender.com/bots/bot.php',
+  'https://ggenius-api.onrender.com'
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
