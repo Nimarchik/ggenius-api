@@ -2,8 +2,8 @@
 
 $host = getenv('HOST_DB_GG');
 $port = getenv('PORT_DB_GG');
-$db   = getenv('NAME_DB_GG');
 $user = getenv('USER_DB_GG');
+$db   = getenv('NAME_DB_GG');
 $pass = getenv('PASS_DB_GG');
 
 if (!$host || !$db || !$user) {
