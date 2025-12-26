@@ -5,7 +5,7 @@ $port = getenv('PORT_DB_GG');
 $user = getenv('USER_DB_GG');
 $db   = getenv('NAME_DB_GG');
 // $pass = getenv('PASS_DB_GG');
-$pass = 'N01012026';
+$pass = 'p7aad477be5e7c084f8d9c2e9998fdfd75ed3eb573c808a6b3db95bbdb221b234';
 
 
 
