@@ -1,10 +1,10 @@
 <?php
 $url = parse_url(getenv("DATABASE_URL"));
 
-$host = $url["mlbb_host"];
-$port = $url["mlbb_port"];
-$user = $url["mlbb_user"];
-$pass = $url["mlbb_pass"];
+$host = $url["host"];
+$port = $url["port"];
+$user = $url["user"];
+$pass = $url["pass"];
 $db   = ltrim($url["path"], "/");
 
 $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require";
