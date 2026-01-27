@@ -7,8 +7,6 @@ $db   = getenv('NAME_DB_GG');
 $pass = getenv('PASS_DB_GG');
 
 
-
-
 if (!$host || !$db || !$user) {
   http_response_code(500);
   die('ENV variables not found');
