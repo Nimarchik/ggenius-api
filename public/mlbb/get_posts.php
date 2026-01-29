@@ -4,5 +4,16 @@ require "db.php";
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 
-$stmt = $pdo->query("SELECT * FROM posts ORDER BY id DESC");
+$table = $_GET['table'] ?? 'posts'; // по умолчанию posts
+
+// белый список, чтобы не дать выполнить любой SQL
+$allowed = ['chat_members', 'зщыеы', 'news'];
+
+if (!in_array($table, $allowed)) {
+  http_response_code(400);
+  echo json_encode(["error" => "Invalid table"]);
+  exit;
+}
+
+$stmt = $pdo->query("SELECT * FROM $table ORDER BY id DESC");
 echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
