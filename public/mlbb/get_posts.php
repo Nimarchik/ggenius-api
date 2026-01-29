@@ -2,7 +2,7 @@
 require "db.php";
 
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: http://localhost:5173");
 
 $table = $_GET['table'] ?? 'posts'; // по умолчанию posts
 
