@@ -7,7 +7,7 @@ header("Access-Control-Allow-Origin: *");
 $table = $_GET['table'] ?? 'posts'; // по умолчанию posts
 
 // белый список, чтобы не дать выполнить любой SQL
-// $allowed = ['chat_members', 'posts', 'news'];
+$allowed = ['chat_members', 'posts', 'news'];
 
 if (!in_array($table, $allowed)) {
   http_response_code(400);
