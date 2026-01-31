@@ -9,6 +9,7 @@ $table = $_GET['table'] ?? 'posts'; // по умолчанию posts
 // белый список, чтобы не дать выполнить любой SQL
 $allowed = [
   'chat_members',
+  'chat_info',
   'posts',
   'news',
   'arena_stats',
