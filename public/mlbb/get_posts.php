@@ -1,12 +1,12 @@
 <?php
+
 require "db.php";
 
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: http://localhost:5173");
 
-$table = $_GET['table'] ?? 'posts'; // по умолчанию posts
+$table = $_GET['table'] ?? 'posts';
 
-// белый список, чтобы не дать выполнить любой SQL
 $allowed = [
   'chat_members',
   'chat_info',
@@ -39,5 +39,26 @@ if (!in_array($table, $allowed)) {
   exit;
 }
 
-$stmt = $pdo->query("SELECT * FROM $table ORDER BY id DESC");
-echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+$orderBy = [
+  'posts' => 'id',
+  'chat_members' => 'id',
+  'chat_info' => 'chat_id'
+];
+
+$column = $orderBy[$table] ?? null;
+
+$sql = $column
+  ? "SELECT * FROM $table ORDER BY $column DESC"
+  : "SELECT * FROM $table";
+
+try {
+  $stmt = $pdo->query($sql);
+  $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+  echo json_encode($data ?: []);
+} catch (Throwable $e) {
+  echo json_encode([
+    "error" => true,
+    "message" => $e->getMessage()
+  ]);
+}
