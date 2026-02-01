@@ -1,31 +1,38 @@
 <?php
-// avatar.php — прокси для Telegram photo_url
+// avatar.php
 
-$url = $_GET['url'] ?? '';
-
-if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+// Проверка, что параметр url передан
+if (!isset($_GET['url'])) {
   http_response_code(400);
-  exit('Invalid URL');
+  die("Invalid URL: missing parameter");
 }
 
-// Telegram иногда режет без User-Agent
-$opts = [
-  "http" => [
-    "method" => "GET",
-    "header" => "User-Agent: Mozilla/5.0\r\n"
-  ]
-];
+$url = $_GET['url'];
 
-$context = stream_context_create($opts);
-$image = @file_get_contents($url, false, $context);
+// Простейшая проверка, что это Telegram URL
+if (!preg_match('/^https:\/\/t\.me\/i\/userpic\/\d+\/[A-Za-z0-9_-]+\.jpg$/', $url)) {
+  http_response_code(400);
+  die("Invalid URL: must be Telegram userpic");
+}
 
-if (!$image) {
+// Попытка получить картинку
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // на случай редиректов
+curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0");
+
+$data = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+curl_close($ch);
+
+if (!$data || $httpCode !== 200) {
   http_response_code(404);
-  exit;
+  die("Failed to fetch image");
 }
 
-// Определяем тип (Telegram обычно jpeg)
-header("Content-Type: image/jpeg");
-header("Cache-Control: public, max-age=86400");
-
-echo $image;
+// Отдаем заголовки и картинку
+header("Content-Type: $contentType");
+header("Cache-Control: max-age=3600"); // кэш на 1 час
+echo $data;
+exit;
