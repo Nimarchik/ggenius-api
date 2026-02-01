@@ -1,73 +1,47 @@
 <?php
-header("Content-Type: application/json");
 
-// 1. Настройка CORS
-$allowedOrigins = [
-  'http://localhost:5173',
-  'https://eba4e580b13c.ngrok-free.app',
-  'https://ggenius-api.onrender.com',
-  'https://ggenius-api.onrender.com/bots/bot.php'
-];
-
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins)) {
-  header("Access-Control-Allow-Origin: $origin");
-  header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-  header("Access-Control-Allow-Headers: Content-Type, Authorization");
-}
-
-if (file_exists(__DIR__ . '/.env'))  // Укажите путь до вашего .env
-  $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-foreach ($lines as $line) {
-  if (strpos(trim($line), '#') === 0) continue;
-  list($name, $value) = explode('=', $line, 2);
-  $_ENV[trim($name)] = trim($value);
-  putenv(trim($name) . "=" . trim($value));
-}
-
-
-// 2. Получаем токен из окружения
-$token = getenv("BOT_TOKEN");
-
+// 1. Получаем токен
+$token = getenv('BOT_TOKEN');
 if (!$token) {
-  die('Ошибка: BOT_TOKEN не настроен в переменых окружения');
+  die('BOT_TOKEN not set');
 }
 
-// 3. Данные от Telegram приходят через GET при нажатии login_url
+// 2. Получаем данные от Telegram
 $auth_data = $_GET;
 
 if (!isset($auth_data['hash'])) {
-  die('Ошибка: Данные не получены (нет hash)');
+  die('No hash provided');
 }
 
 $check_hash = $auth_data['hash'];
 unset($auth_data['hash']);
 
-// 4. Подготовка строки для проверки
+// 3. Формируем строку проверки
 $data_check_arr = [];
 foreach ($auth_data as $key => $value) {
-  $data_check_arr[] = $key . '=' . $value;
+  $data_check_arr[] = $key . '=' . (string)$value;
 }
+
 sort($data_check_arr);
 $data_check_string = implode("\n", $data_check_arr);
 
-// 5. Вычисление хеша
+// 4. Проверяем подпись
 $secret_key = hash('sha256', $token, true);
 $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
-// 6. Проверка и редирект
-if (strcmp($hash, $check_hash) === 0) {
-  // Проверка на актуальность данных (не старше 24 часов)
-  if ((time() - $auth_data['auth_date']) > 86400) {
-    die('Ошибка: Данные устарели');
-  }
-
-  $userData = base64_encode(json_encode($auth_data));
-
-  // Редирект на локальный React (или на ngrok адрес фронтенда)
-  header("Location: https://eba4e580b13c.ngrok-free.app/?user=" . $userData);
-  exit;
-} else {
+if (!hash_equals($hash, $check_hash)) {
   http_response_code(401);
-  echo "Ошибка авторизации: подпись не верна.";
+  die('Invalid hash');
 }
+
+// 5. Проверка времени
+if ((time() - $auth_data['auth_date']) > 86400) {
+  die('Auth data expired');
+}
+
+// 6. Кодируем данные
+$userData = base64_encode(json_encode($auth_data));
+
+// 7. Редирект на фронт
+header('Location: https://eba4e580b13c.ngrok-free.app/?user=' . $userData);
+exit;
