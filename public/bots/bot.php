@@ -32,7 +32,7 @@ if (file_exists(__DIR__ . '/.env')) { // Укажите путь до вашег
 $token = $_ENV['BOT_TOKEN'];
 
 // Ссылка на обработчик АВТОРИЗАЦИИ (не на сам bot.php)
-$website_url = 'https://6fbfdc3c2fdc.ngrok-free.app/auth.php';
+$website_url = 'https://ggenius-api.onrender.com/bots/auth.php';
 
 $input = file_get_contents('php://input');
 $update = json_decode($input, true);
