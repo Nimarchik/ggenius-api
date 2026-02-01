@@ -27,7 +27,7 @@ foreach ($lines as $line) {
 
 
 // 2. Получаем токен из окружения
-$token = $_ENV['BOT_TOKEN'];
+$token = getenv("BOT_TOKEN");
 
 if (!$token) {
   die('Ошибка: BOT_TOKEN не настроен в переменых окружения');
@@ -65,7 +65,7 @@ if (strcmp($hash, $check_hash) === 0) {
   $userData = base64_encode(json_encode($auth_data));
 
   // Редирект на локальный React (или на ngrok адрес фронтенда)
-  header("Location: http://localhost:5173/?user=" . $userData);
+  header("Location: https://eba4e580b13c.ngrok-free.app/?user=" . $userData);
   exit;
 } else {
   http_response_code(401);

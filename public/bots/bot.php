@@ -29,7 +29,7 @@ if (file_exists(__DIR__ . '/.env')) { // Укажите путь до вашег
 
 
 // Загрузка токена (убедитесь, что переменная окружения доступна)
-$token = $_ENV['BOT_TOKEN'];
+$token = getenv("BOT_TOKEN");
 
 // Ссылка на обработчик АВТОРИЗАЦИИ (не на сам bot.php)
 $website_url = 'https://ggenius-api.onrender.com/bots/auth.php';
