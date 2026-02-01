@@ -4,9 +4,9 @@ header("Content-Type: application/json");
 // 1. Настройка CORS
 $allowedOrigins = [
   'http://localhost:5173',
-  'https://9ea98d3c1cae.ngrok-free.app',
+  'https://eba4e580b13c.ngrok-free.app',
   'https://ggenius-api.onrender.com',
-  'https://c4f9e433bc8b.ngrok-free.app/bots/bot.php'
+  'https://ggenius-api.onrender.com/bots/bot.php'
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
