@@ -80,6 +80,6 @@ $expiresAt = date('Y-m-d H:i:s', time() + 604800); // 7 дней
 pg_query_params($conn, "INSERT INTO refresh_tokens(user_id, token, expires_at) VALUES($1,$2,$3)", [$user_id, $refreshToken, $expiresAt]);
 
 // Редирект на фронтенд с токенами
-$frontend = getenv('FRONTEND_URL') ?: 'https://c815c23fbf0e.ngrok-free.app/';
+$frontend = getenv('FRONTEND_URL') ?: 'https://e451d5583892.ngrok-free.app';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;
