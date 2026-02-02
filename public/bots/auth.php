@@ -25,7 +25,7 @@ $data_check_string = implode("\n", $data_check_arr);
 $secret_key = hash('sha256', $JWT_SECRET, true);
 $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
-if (strcmp($hash, $check_hash) !== 0) {
+if (hash_equals($hash, $check_hash) !== 0) {
   http_response_code(401);
   exit(json_encode(['error' => 'Подпись неверна']));
 }
@@ -69,6 +69,6 @@ $expiresAt = date('Y-m-d H:i:s', time() + 604800); // 7 дней
 pg_query_params($conn, "INSERT INTO refresh_tokens(user_id, token, expires_at) VALUES($1,$2,$3)", [$user_id, $refreshToken, $expiresAt]);
 
 // Редирект на фронтенд с токенами
-$frontend = 'https://d5251569772b.ngrok-free.app/';
+$frontend = 'https://c815c23fbf0e.ngrok-free.app/';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;
