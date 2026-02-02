@@ -1,5 +1,9 @@
 <?php
 
+file_put_contents(__DIR__ . '/telegram_log.txt', date('c') . " webhook hit\n", FILE_APPEND);
+http_response_code(200);
+echo 'OK';
+
 $token = getenv('BOT_TOKEN');
 if (!$token) exit;
 

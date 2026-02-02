@@ -7,7 +7,8 @@ header("Content-Type: application/json");
 $allowedOrigins = [
   'http://localhost:5173',
   'https://ggenius.gg',
-  'https://d5251569772b.ngrok-free.app'
+  'https://d5251569772b.ngrok-free.app',
+  'https://ggenius-api.onrender.com/bots/bot.php'
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -139,5 +140,5 @@ $query = http_build_query([
   'refresh' => $refreshToken
 ]);
 
-header("Location: https://ggenius.gg/auth/callback?$query");
+header("Location: https://d5251569772b.ngrok-free.app/auth/callback?$query"); // https://ggenius.gg/auth/callback?$query
 exit;
