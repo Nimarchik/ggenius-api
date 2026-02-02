@@ -1,144 +1,74 @@
 <?php
-
-declare(strict_types=1);
-
 header("Content-Type: application/json");
 
-$allowedOrigins = [
-  'http://localhost:5173',
-  'https://ggenius.gg',
-  'https://d5251569772b.ngrok-free.app',
-  'https://ggenius-api.onrender.com/bots/bot.php'
-];
+// Подключаемся к БД через DATABASE_URL Render
+$dbUrl = getenv('DATABASE_URL');
+$dbopts = parse_url($dbUrl);
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-foreach ($allowedOrigins as $allowed) {
-  if ($allowed === $origin || str_contains($allowed, '*')) {
-    header("Access-Control-Allow-Origin: $origin");
-    break;
-  }
-}
-header("Access-Control-Allow-Credentials: true");
+$conn = pg_connect("host={$dbopts['host']} port={$dbopts['port']} dbname=" . ltrim($dbopts['path'], '/') . " user={$dbopts['user']} password={$dbopts['pass']} sslmode=require");
 
-$BOT_TOKEN        = getenv('BOT_TOKEN');
-$DATABASE_URL     = getenv('DATABASE_URL');
-$JWT_SECRET       = getenv('JWT_SECRET');
+// JWT
+$JWT_SECRET = getenv('JWT_SECRET');
+if (!$JWT_SECRET) exit(json_encode(['error' => 'JWT_SECRET не настроен']));
 
-if (!$BOT_TOKEN || !$DATABASE_URL || !$JWT_SECRET) {
-  http_response_code(500);
-  echo json_encode(['error' => 'ENV variables missing']);
-  exit;
-}
+// Получаем данные от Telegram login_url
+$auth_data = $_GET;
+if (!isset($auth_data['hash'])) exit(json_encode(['error' => 'Нет данных hash']));
+$check_hash = $auth_data['hash'];
+unset($auth_data['hash']);
 
+// Проверка подписи Telegram
+$data_check_arr = [];
+foreach ($auth_data as $k => $v) $data_check_arr[] = "$k=$v";
+sort($data_check_arr);
+$data_check_string = implode("\n", $data_check_arr);
+$secret_key = hash('sha256', $JWT_SECRET, true);
+$hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
-$db = parse_url($DATABASE_URL);
-
-$pdo = new PDO(
-  "pgsql:host={$db['host']};port={$db['port']};dbname=" . ltrim($db['path'], '/'),
-  $db['user'],
-  $db['pass'],
-  [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-  ]
-);
-
-$authData = $_GET;
-
-if (!isset($authData['hash'])) {
-  http_response_code(400);
-  echo json_encode(['error' => 'No hash']);
-  exit;
-}
-
-$hash = $authData['hash'];
-unset($authData['hash']);
-
-$dataCheckArr = [];
-foreach ($authData as $k => $v) {
-  $dataCheckArr[] = "$k=$v";
-}
-sort($dataCheckArr);
-
-$dataCheckString = implode("\n", $dataCheckArr);
-$secretKey = hash('sha256', $BOT_TOKEN, true);
-$calculatedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
-
-if (!hash_equals($calculatedHash, $hash)) {
+if (strcmp($hash, $check_hash) !== 0) {
   http_response_code(401);
-  echo json_encode(['error' => 'Invalid Telegram signature']);
-  exit;
+  exit(json_encode(['error' => 'Подпись неверна']));
 }
 
-if (time() - (int)$authData['auth_date'] > 86400) {
-  http_response_code(401);
-  echo json_encode(['error' => 'Auth expired']);
-  exit;
-}
+// Проверка на актуальность данных (24 часа)
+if ((time() - $auth_data['auth_date']) > 86400) exit(json_encode(['error' => 'Данные устарели']));
 
-
-$telegramId = (int)$authData['id'];
-$username   = $authData['username'] ?? null;
-$firstName  = $authData['first_name'] ?? null;
-$photoUrl   = $authData['photo_url'] ?? null;
-
-$stmt = $pdo->prepare("SELECT * FROM users WHERE telegram_id = :id");
-$stmt->execute(['id' => $telegramId]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// Проверяем пользователя в базе
+$user_id = $auth_data['id']; // telegram_id
+$res = pg_query_params($conn, "SELECT * FROM users WHERE telegram_id=$1", [$user_id]);
+$user = pg_fetch_assoc($res);
 
 if (!$user) {
-  $stmt = $pdo->prepare("
-    INSERT INTO users (telegram_id, nickname, created_at)
-    VALUES (:id, :nickname, NOW())
-    RETURNING *
-  ");
-  $stmt->execute([
-    'id' => $telegramId,
-    'nickname' => $username ?? $firstName ?? 'Telegram user'
-  ]);
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+  // Добавляем нового пользователя
+  $columns = ['telegram_id', 'first_name', 'username', 'photo_url', 'created_at'];
+  $values = [
+    $user_id,
+    $auth_data['first_name'] ?? '',
+    $auth_data['username'] ?? '',
+    $auth_data['photo_url'] ?? '',
+    date('Y-m-d H:i:s')
+  ];
+  $query = "INSERT INTO users(" . implode(',', $columns) . ") VALUES('" . implode("','", $values) . "')";
+  pg_query($conn, $query);
+  $user = ['telegram_id' => $user_id, 'first_name' => $auth_data['first_name'] ?? '', 'username' => $auth_data['username'] ?? '', 'photo_url' => $auth_data['photo_url'] ?? ''];
 }
 
-function base64url_encode(string $data): string
-{
-  return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-}
+// Генерируем Access Token (JWT)
+$header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+$payload = base64_encode(json_encode([
+  'uid' => $user_id,
+  'iat' => time(),
+  'exp' => time() + 3600 // 1 час
+]));
+$signature = hash_hmac('sha256', "$header.$payload", $JWT_SECRET, true);
+$accessToken = "$header.$payload." . base64_encode($signature);
 
-function create_jwt(array $payload, string $secret, int $ttl): string
-{
-  $header = ['alg' => 'HS256', 'typ' => 'JWT'];
-  $payload['iat'] = time();
-  $payload['exp'] = time() + $ttl;
-
-  $base = base64url_encode(json_encode($header)) . '.' .
-    base64url_encode(json_encode($payload));
-
-  $signature = hash_hmac('sha256', $base, $secret, true);
-
-  return $base . '.' . base64url_encode($signature);
-}
-
-$accessToken = create_jwt([
-  'uid' => $telegramId
-], $JWT_SECRET, 900); // 15 min
-
+// Генерируем Refresh Token
 $refreshToken = bin2hex(random_bytes(64));
-$refreshExp = date('Y-m-d H:i:s', time() + 60 * 60 * 24 * 30);
+$expiresAt = date('Y-m-d H:i:s', time() + 604800); // 7 дней
+pg_query_params($conn, "INSERT INTO refresh_tokens(user_id, token, expires_at) VALUES($1,$2,$3)", [$user_id, $refreshToken, $expiresAt]);
 
-// save refresh token
-$stmt = $pdo->prepare("
-  INSERT INTO refresh_tokens (user_id, token, expires_at)
-  VALUES (:uid, :token, :exp)
-");
-$stmt->execute([
-  'uid' => $telegramId,
-  'token' => $refreshToken,
-  'exp' => $refreshExp
-]);
-
-$query = http_build_query([
-  'access' => $accessToken,
-  'refresh' => $refreshToken
-]);
-
-header("Location: https://d5251569772b.ngrok-free.app/auth/callback?$query"); // https://ggenius.gg/auth/callback?$query
+// Редирект на фронтенд с токенами
+$frontend = 'https://d5251569772b.ngrok-free.app/';
+header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;
