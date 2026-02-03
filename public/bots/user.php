@@ -56,10 +56,12 @@ list($headerB64, $payloadB64, $signatureB64) = $parts;
 
 // Проверка подписи
 $expectedSig = base64url_encode(hash_hmac('sha256', "$headerB64.$payloadB64", $JWT_SECRET, true));
+
 if (!hash_equals($expectedSig, $signatureB64)) {
   http_response_code(401);
   exit(json_encode(['error' => 'Неверный токен']));
 }
+
 
 // Декодируем payload
 $payload = json_decode(base64url_decode($payloadB64), true);
