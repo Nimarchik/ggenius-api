@@ -76,7 +76,7 @@ $header = base64url_encode(json_encode([
 ]));
 
 $payload = base64url_encode(json_encode([
-  'uid' => (string)$user_id, // ВАЖНО: строка
+  'uid' => (int)$user_id, // ВАЖНО: строка
   'iat' => time(),
   'exp' => time() + 3600 // 1 час
 ]));

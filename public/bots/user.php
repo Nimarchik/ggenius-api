@@ -80,7 +80,7 @@ if (isset($payload['exp']) && $payload['exp'] < time()) {
 }
 
 // --- Получаем пользователя ---
-$uid = (string)$payload['uid']; // Важно: строка
+$uid = (int)$payload['uid']; // Важно: строка
 $res = pg_query_params($conn, "SELECT * FROM users WHERE telegram_id = $1", [$uid]);
 if (!$res) {
   http_response_code(500);
