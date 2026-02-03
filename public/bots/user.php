@@ -91,4 +91,7 @@ if (!$user) {
   exit(json_encode(['error' => 'User not found']));
 }
 
+error_log($expectedSignature);
+error_log($signatureB64);
+
 echo json_encode(['user' => $user]);
