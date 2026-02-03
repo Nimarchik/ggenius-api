@@ -1,23 +1,26 @@
 <?php
 header("Content-Type: application/json");
 
-// Подключение к базе через DATABASE_URL Render
+// === Подключение к базе через DATABASE_URL Render ===
 $dbUrl = getenv('DATABASE_URL');
 if (!$dbUrl) exit(json_encode(['error' => 'DATABASE_URL не настроен']));
 
 $dbopts = parse_url($dbUrl);
-$conn = pg_connect("host={$dbopts['host']} port={$dbopts['port']} dbname=" . ltrim($dbopts['path'], '/') . " user={$dbopts['user']} password={$dbopts['pass']} sslmode=require");
+$conn = pg_connect(
+  "host={$dbopts['host']} port={$dbopts['port']} dbname=" . ltrim($dbopts['path'], '/') .
+    " user={$dbopts['user']} password={$dbopts['pass']} sslmode=require"
+);
 if (!$conn) exit(json_encode(['error' => 'Не удалось подключиться к БД']));
 
-// Telegram Bot Token
+// === Telegram Bot Token ===
 $bot_token = getenv('BOT_TOKEN');
 if (!$bot_token) exit(json_encode(['error' => 'BOT_TOKEN не настроен']));
 
-// JWT secret
+// === JWT secret ===
 $JWT_SECRET = getenv('JWT_SECRET');
 if (!$JWT_SECRET) exit(json_encode(['error' => 'JWT_SECRET не настроен']));
 
-// Получаем данные Telegram login_url
+// === Получаем данные Telegram login_url ===
 $auth_data = $_GET;
 if (!isset($auth_data['hash'])) exit(json_encode(['error' => 'Нет данных hash']));
 $check_hash = $auth_data['hash'];
@@ -37,7 +40,10 @@ if (!hash_equals($hash, $check_hash)) {
 }
 
 // Проверка актуальности данных (не старше 24 часов)
-if ((time() - $auth_data['auth_date']) > 86400) exit(json_encode(['error' => 'Данные устарели']));
+if ((time() - $auth_data['auth_date']) > 86400) {
+  http_response_code(401);
+  exit(json_encode(['error' => 'Данные устарели']));
+}
 
 // Проверяем пользователя в базе
 $user_id = $auth_data['id']; // telegram_id
@@ -64,30 +70,21 @@ if (!$user) {
   ];
 }
 
-// Генерация JWT Access Token (1 час)
+// === JWT функции ===
 function base64url_encode($data)
 {
   return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
-$header = base64url_encode(json_encode([
-  'alg' => 'HS256',
-  'typ' => 'JWT'
-]));
-
+// Генерация Access Token (1 час)
+$header = base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
 $payload = base64url_encode(json_encode([
-  'uid' => (int)$user_id, // ВАЖНО: строка
+  'uid' => (string)$user_id,
   'iat' => time(),
-  'exp' => time() + 3600 // 1 час
+  'exp' => time() + 3600
 ]));
-
-$signature = base64url_encode(
-  hash_hmac('sha256', "$header.$payload", $JWT_SECRET, true)
-);
-
+$signature = base64url_encode(hash_hmac('sha256', "$header.$payload", $JWT_SECRET, true));
 $accessToken = "$header.$payload.$signature";
-
-
 
 // Генерация Refresh Token (7 дней)
 $refreshToken = bin2hex(random_bytes(64));
@@ -95,6 +92,6 @@ $expiresAt = date('Y-m-d H:i:s', time() + 604800); // 7 дней
 pg_query_params($conn, "INSERT INTO refresh_tokens(user_id, token, expires_at) VALUES($1,$2,$3)", [$user_id, $refreshToken, $expiresAt]);
 
 // Редирект на фронтенд с токенами
-$frontend = getenv('FRONTEND_URL') ?: 'https://9f3c3570d108.ngrok-free.app';
+$frontend = getenv('FRONTEND_URL') ?: 'https://your-frontend-url.com';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;
