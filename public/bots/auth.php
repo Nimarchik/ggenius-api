@@ -65,14 +65,29 @@ if (!$user) {
 }
 
 // Генерация JWT Access Token (1 час)
-$header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
-$payload = base64_encode(json_encode([
-  'uid' => $user_id,
-  'iat' => time(),
-  'exp' => time() + 3600
+function base64url_encode($data)
+{
+  return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+}
+
+$header = base64url_encode(json_encode([
+  'alg' => 'HS256',
+  'typ' => 'JWT'
 ]));
-$signature = hash_hmac('sha256', "$header.$payload", $JWT_SECRET, true);
-$accessToken = "$header.$payload." . base64_encode($signature);
+
+$payload = base64url_encode(json_encode([
+  'uid' => (string)$user_id, // ВАЖНО: строка
+  'iat' => time(),
+  'exp' => time() + 3600 // 1 час
+]));
+
+$signature = base64url_encode(
+  hash_hmac('sha256', "$header.$payload", $JWT_SECRET, true)
+);
+
+$accessToken = "$header.$payload.$signature";
+
+
 
 // Генерация Refresh Token (7 дней)
 $refreshToken = bin2hex(random_bytes(64));
