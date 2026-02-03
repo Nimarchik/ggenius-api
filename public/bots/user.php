@@ -4,13 +4,12 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Authorization, Content-Type");
 
-// Для preflight-запроса
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   http_response_code(200);
   exit;
 }
 
-// Функции base64url
+// --- Функции base64url ---
 function base64url_encode($data)
 {
   return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
@@ -18,25 +17,31 @@ function base64url_encode($data)
 
 function base64url_decode($data)
 {
+  $remainder = strlen($data) % 4;
+  if ($remainder) {
+    $data .= str_repeat('=', 4 - $remainder);
+  }
   return base64_decode(strtr($data, '-_', '+/'));
 }
 
-// Подключение к базе
+// --- Подключение к базе ---
 $dbUrl = getenv('DATABASE_URL');
 $dbopts = parse_url($dbUrl);
+
 $conn = pg_connect(
   "host={$dbopts['host']} port={$dbopts['port']} dbname=" . ltrim($dbopts['path'], '/') .
     " user={$dbopts['user']} password={$dbopts['pass']} sslmode=require"
 );
+
 if (!$conn) {
   http_response_code(500);
   exit(json_encode(['error' => 'Не удалось подключиться к базе данных']));
 }
 
-// Секрет JWT
+// --- JWT SECRET ---
 $JWT_SECRET = getenv('JWT_SECRET');
 
-// Получаем токен из заголовка Authorization
+// --- Получаем токен из заголовка Authorization ---
 $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
 if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
   http_response_code(401);
@@ -45,7 +50,7 @@ if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
 
 $token = substr($authHeader, 7);
 
-// Проверяем структуру JWT
+// --- Проверка структуры JWT ---
 $parts = explode('.', $token);
 if (count($parts) !== 3) {
   http_response_code(401);
@@ -54,30 +59,28 @@ if (count($parts) !== 3) {
 
 list($headerB64, $payloadB64, $signatureB64) = $parts;
 
-// Проверка подписи
+// --- Проверка подписи ---
 $expectedSig = base64url_encode(hash_hmac('sha256', "$headerB64.$payloadB64", $JWT_SECRET, true));
-
 if (!hash_equals($expectedSig, $signatureB64)) {
   http_response_code(401);
   exit(json_encode(['error' => 'Неверный токен']));
 }
 
-
-// Декодируем payload
+// --- Декодируем payload ---
 $payload = json_decode(base64url_decode($payloadB64), true);
 if (!$payload || !isset($payload['uid'])) {
   http_response_code(401);
   exit(json_encode(['error' => 'Неверный payload']));
 }
 
-// Проверяем срок действия токена
+// --- Проверяем срок действия токена ---
 if (isset($payload['exp']) && $payload['exp'] < time()) {
   http_response_code(401);
   exit(json_encode(['error' => 'Токен устарел']));
 }
 
-// Получаем пользователя из базы
-$uid = (string)$payload['uid']; // Telegram ID как строка
+// --- Получаем пользователя ---
+$uid = (string)$payload['uid']; // Важно: строка
 $res = pg_query_params($conn, "SELECT * FROM users WHERE telegram_id = $1", [$uid]);
 if (!$res) {
   http_response_code(500);
@@ -90,5 +93,5 @@ if (!$user) {
   exit(json_encode(['error' => 'Пользователь не найден']));
 }
 
-// Возвращаем пользователя
+// --- Возвращаем пользователя ---
 echo json_encode(['user' => $user]);
