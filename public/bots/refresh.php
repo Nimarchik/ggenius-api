@@ -32,6 +32,10 @@ if (!$conn) {
 
 $JWT_SECRET = getenv('JWT_SECRET');
 
+// Очистка просроченных refresh токенов
+pg_query($conn, "DELETE FROM refresh_tokens_site WHERE expires_at < NOW()");
+
+
 // Получаем refresh токен
 $input = json_decode(file_get_contents('php://input'), true);
 $refreshToken = $input['refresh'] ?? '';
