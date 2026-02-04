@@ -86,12 +86,25 @@ $payload = base64url_encode(json_encode([
 $signature = base64url_encode(hash_hmac('sha256', "$header.$payload", $JWT_SECRET, true));
 $accessToken = "$header.$payload.$signature";
 
-// Генерация Refresh Token (7 дней)
-$refreshToken = bin2hex(random_bytes(64));
-$expiresAt = date('Y-m-d H:i:s', time() + 604800); // 7 дней
-pg_query_params($conn, "INSERT INTO refresh_tokens(user_id, token, expires_at) VALUES($1,$2,$3)", [$user_id, $refreshToken, $expiresAt]);
+// Генерация Refresh Token (7 дней, тоже JWT)
+$headerR = base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+$payloadR = base64url_encode(json_encode([
+  'uid' => (string)$user_id,
+  'iat' => time(),
+  'exp' => time() + 604800 // 7 дней
+]));
+$signatureR = base64url_encode(hash_hmac('sha256', "$headerR.$payloadR", $JWT_SECRET, true));
+$refreshToken = "$headerR.$payloadR.$signatureR";
 
-// Редирект на фронтенд с токенами
+// Сохраняем refresh в базе
+$expiresAt = date('Y-m-d H:i:s', time() + 604800);
+pg_query_params(
+  $conn,
+  "INSERT INTO refresh_tokens_site(user_id, token, expires_at) VALUES($1,$2,$3)",
+  [$user_id, $refreshToken, $expiresAt]
+);
+
+// Редирект на фронт
 $frontend = getenv('FRONTEND_URL') ?: 'https://2c1baceb6325.ngrok-free.app';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;

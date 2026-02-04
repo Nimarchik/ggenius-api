@@ -9,12 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit;
 }
 
-// Функции base64url
 function base64url_encode($data)
 {
   return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
-
 function base64url_decode($data)
 {
   return base64_decode(strtr($data, '-_', '+/'));
@@ -32,10 +30,9 @@ if (!$conn) {
   exit(json_encode(['error' => 'Не удалось подключиться к базе данных']));
 }
 
-// JWT секрет
 $JWT_SECRET = getenv('JWT_SECRET');
 
-// Получаем тело запроса
+// Получаем refresh токен
 $input = json_decode(file_get_contents('php://input'), true);
 $refreshToken = $input['refresh'] ?? '';
 if (!$refreshToken) {
@@ -43,13 +40,12 @@ if (!$refreshToken) {
   exit(json_encode(['error' => 'Нет refresh токена']));
 }
 
-// Проверка структуры JWT
+// Разбираем JWT
 $parts = explode('.', $refreshToken);
 if (count($parts) !== 3) {
   http_response_code(401);
   exit(json_encode(['error' => 'Неверный refresh токен']));
 }
-
 list($headerB64, $payloadB64, $signatureB64) = $parts;
 
 // Проверка подписи
@@ -66,29 +62,23 @@ if (!$payload || !isset($payload['uid'])) {
   exit(json_encode(['error' => 'Неверный payload']));
 }
 
-// Проверяем срок действия refresh токена
+// Проверяем срок действия
 if (isset($payload['exp']) && $payload['exp'] < time()) {
   http_response_code(401);
   exit(json_encode(['error' => 'Refresh токен устарел']));
 }
 
-// Telegram ID пользователя
 $uid = (string)$payload['uid'];
 
-// Проверяем пользователя в базе
-$res = pg_query_params($conn, "SELECT * FROM users WHERE telegram_id = $1", [$uid]);
-if (!$res) {
-  http_response_code(500);
-  exit(json_encode(['error' => 'Ошибка запроса к базе']));
+// Проверяем refresh в базе
+$res = pg_query_params($conn, "SELECT * FROM refresh_tokens_site WHERE token=$1 AND user_id=$2", [$refreshToken, $uid]);
+$row = pg_fetch_assoc($res);
+if (!$row) {
+  http_response_code(401);
+  exit(json_encode(['error' => 'Refresh токен не найден']));
 }
 
-$user = pg_fetch_assoc($res);
-if (!$user) {
-  http_response_code(404);
-  exit(json_encode(['error' => 'Пользователь не найден']));
-}
-
-// Генерируем новый Access Token (1 час)
+// Генерируем новый Access Token
 $headerNew = base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
 $payloadNew = base64url_encode(json_encode([
   'uid' => $uid,
@@ -97,9 +87,6 @@ $payloadNew = base64url_encode(json_encode([
 ]));
 $signatureNew = base64url_encode(hash_hmac('sha256', "$headerNew.$payloadNew", $JWT_SECRET, true));
 $accessToken = "$headerNew.$payloadNew.$signatureNew";
-
-// Можно по желанию обновлять refresh токен, например, если срок меньше 1 дня
-// Здесь оставляем старый refresh токен
 
 echo json_encode([
   'access' => $accessToken,
