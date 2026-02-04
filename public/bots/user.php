@@ -106,10 +106,10 @@ if (!$user) {
 
 // Всё ок, возвращаем пользователя
 writeLog("User fetched successfully for uid=$uid");
-echo json_encode(['user' => $user]);
 
 echo json_encode([
   'debug_uid' => $uid,
-  'debug_payload' => $payload
+  'debug_payload' => $payload,
+  'user' => $user
 ]);
 exit;
