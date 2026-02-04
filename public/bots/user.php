@@ -27,8 +27,18 @@ if (!$conn) {
 $JWT_SECRET = getenv('JWT_SECRET');
 
 // Получаем токен из заголовка Authorization
-$headers = getallheaders();
-$authHeader = $headers['Authorization'] ?? '';
+$authHeader = '';
+if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+  $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+} elseif (function_exists('apache_request_headers')) {
+  $headers = apache_request_headers();
+  if (isset($headers['Authorization'])) {
+    $authHeader = $headers['Authorization'];
+  }
+} else {
+  $headers = getallheaders();
+  $authHeader = $headers['Authorization'] ?? '';
+}
 
 if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
   http_response_code(401);
@@ -36,6 +46,7 @@ if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
 }
 
 $token = substr($authHeader, 7);
+
 
 // Функции base64url
 function base64url_decode($data)
