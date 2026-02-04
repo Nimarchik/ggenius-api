@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Authorization, Content-Type");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -44,7 +44,7 @@ if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
 
 $token = substr($authHeader, 7);
 
-// Разбираем JWT
+// Функции base64url
 function base64url_decode($data)
 {
   return base64_decode(strtr($data, '-_', '+/'));
@@ -54,6 +54,7 @@ function base64url_encode($data)
   return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
 
+// Разбираем JWT
 $parts = explode('.', $token);
 if (count($parts) !== 3) {
   writeLog("Invalid token structure");
@@ -106,10 +107,9 @@ if (!$user) {
 
 // Всё ок, возвращаем пользователя
 writeLog("User fetched successfully for uid=$uid");
-
 echo json_encode([
+  'user' => $user,
   'debug_uid' => $uid,
-  'debug_payload' => $payload,
-  'user' => $user
+  'debug_payload' => $payload
 ]);
 exit;
