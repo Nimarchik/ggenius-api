@@ -105,6 +105,6 @@ pg_query_params(
 );
 
 // Редирект на фронт
-$frontend = getenv('FRONTEND_URL') ?: 'https://2c1baceb6325.ngrok-free.app';
+$frontend = getenv('FRONTEND_URL') ?: 'https://0c8f8411d68a.ngrok-free.app';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;
