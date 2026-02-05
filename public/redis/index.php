@@ -1,7 +1,8 @@
 <?php
 $redis = new Redis();
 
-$redis_url = getenv('REDIS_URL'); // например, REDIS_URL=redis://default:password@host:port
+// Берём URL из переменной окружения
+$redis_url = getenv('REDIS_URL');
 $parts = parse_url($redis_url);
 
 $host = $parts['host'];
@@ -9,6 +10,7 @@ $port = $parts['port'];
 $password = $parts['pass'] ?? null;
 $db = isset($parts['path']) ? ltrim($parts['path'], '/') : 0;
 
+// Подключение
 if (!$redis->connect($host, $port)) {
   die("Не удалось подключиться к Redis");
 }
@@ -19,5 +21,14 @@ if ($password) {
 
 $redis->select((int)$db);
 
-$redis->set('key', 'value');
-echo $redis->get('key'); // value
+// Получаем все ключи
+$keys = $redis->keys('*');
+
+if (empty($keys)) {
+  echo "Нет ключей в Redis\n";
+} else {
+  foreach ($keys as $key) {
+    $value = $redis->get($key);
+    echo $key . " => " . $value . "\n";
+  }
+}
