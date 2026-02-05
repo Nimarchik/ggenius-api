@@ -15,3 +15,6 @@ RUN apt-get update && apt-get install -y libpq-dev \
 # Устанавливаем PostgreSQL и необходимые расширения
 RUN apt-get update && apt-get install -y libpq-dev \
     && docker-php-ext-install pdo_pgsql pgsql
+
+RUN pecl install redis \
+    && docker-php-ext-enable redis
