@@ -21,14 +21,14 @@ if ($password) {
 
 $redis->select((int)$db);
 
-// Получаем все ключи
-$keys = $redis->keys('*');
-
-if (empty($keys)) {
-  echo "Нет ключей в Redis\n";
-} else {
-  foreach ($keys as $key) {
-    $value = $redis->get($key);
-    echo $key . " => " . $value . "\n";
+// Итеративно сканируем все ключи
+$it = null;
+do {
+  $keys = $redis->scan($it);
+  if ($keys !== false) {
+    foreach ($keys as $key) {
+      $value = $redis->get($key);
+      echo $key . " => " . $value . "\n";
+    }
   }
-}
+} while ($it > 0);
