@@ -32,7 +32,7 @@ if (strpos($text, '/auth') === 0) {
   $data = [
     'chat_id' => $chat_id,
     'text' => 'Натисни кнопку, щоб авторизуватися на сайті:',
-    'reply_markup' => json_encode($keyboard)
+    // 'reply_markup' => json_encode($keyboard)
   ];
 
   $ch = curl_init("https://api.telegram.org/bot$token/sendMessage");
@@ -42,3 +42,4 @@ if (strpos($text, '/auth') === 0) {
   curl_exec($ch);
   curl_close($ch);
 }
+
