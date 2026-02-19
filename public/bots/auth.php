@@ -105,6 +105,6 @@ pg_query_params(
 );
 
 // Редирект на фронт
-$frontend = getenv('FRONTEND_URL') ?: 'http://localhost:5173/Home';
+$frontend = getenv('FRONTEND_URL') ?: 'https://ggenius.gg/Home';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;

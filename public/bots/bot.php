@@ -20,7 +20,7 @@ if (strpos($text, '/start') === 0) {
   $keyboard = [
     'inline_keyboard' => [[
       [
-        'text' => '🚀 Войти на сайт',
+        'text' => '🚀 Увійти на сайт',
         'login_url' => [
           'url' => 'https://ggenius-api.onrender.com/bots/auth.php',
           'request_write_access' => true
@@ -31,7 +31,7 @@ if (strpos($text, '/start') === 0) {
 
   $data = [
     'chat_id' => $chat_id,
-    'text' => 'Нажмите кнопку для авторизации:',
+    'text' => 'Натисни кнопку, щоб авторизуватися на сайті:',
     'reply_markup' => json_encode($keyboard)
   ];
 

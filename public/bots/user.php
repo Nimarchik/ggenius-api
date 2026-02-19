@@ -1,6 +1,6 @@
 <?php
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: https://ggenius.gg");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Authorization, Content-Type");
 
