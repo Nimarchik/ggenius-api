@@ -15,7 +15,7 @@ if (!isset($update['message'])) exit;
 $chat_id = $update['message']['chat']['id'];
 $text = $update['message']['text'] ?? '';
 
-if (strpos($text, '/start') === 0) {
+if (strpos($text, '/auth') === 0) {
 
   $keyboard = [
     'inline_keyboard' => [[
