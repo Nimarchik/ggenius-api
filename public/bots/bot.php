@@ -15,7 +15,7 @@ if (!isset($update['message'])) exit;
 $chat_id = $update['message']['chat']['id'];
 $text = $update['message']['text'] ?? '';
 
-if (strpos($text, '/auth') === 0) {
+if (strpos($text, '/start') === 0) {
 
   $keyboard = [
     'inline_keyboard' => [[
@@ -32,7 +32,7 @@ if (strpos($text, '/auth') === 0) {
   $data = [
     'chat_id' => $chat_id,
     'text' => 'Натисни кнопку, щоб авторизуватися на сайті:',
-    // 'reply_markup' => json_encode($keyboard)
+    'reply_markup' => json_encode($keyboard)
   ];
 
   $ch = curl_init("https://api.telegram.org/bot$token/sendMessage");
