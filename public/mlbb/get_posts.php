@@ -30,7 +30,8 @@ $allowed = [
   'party_lobbies',
   'party_lobby_members',
   'duel_stats',
-  'users'
+  'users',
+  'shop_packages'
 ];
 
 if (!in_array($table, $allowed)) {
