@@ -1,6 +1,6 @@
 <?php
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: https://ggenius.gg");
+header("Access-Control-Allow-Origin: https://ggenius.gg/");
 
 $BOT_TOKEN = getenv("TELEGRAM_BOT_TOKEN"); 
 

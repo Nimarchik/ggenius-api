@@ -3,7 +3,7 @@
 require "db.php";
 
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: http://localhost:5173");
+header("Access-Control-Allow-Origin: https://ggenius.gg/");
 
 $table = $_GET['table'] ?? 'posts';
 
