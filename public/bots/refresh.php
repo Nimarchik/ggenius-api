@@ -19,7 +19,7 @@ function base64url_decode($data)
 }
 
 // Подключение к базе
-$dbUrl = getenv('DATABASE_URL');
+$dbUrl = getenv('DATABASE_URL'); // getenv('DATABASE_URL')
 $dbopts = parse_url($dbUrl);
 $conn = pg_connect(
   "host={$dbopts['host']} port={$dbopts['port']} dbname=" . ltrim($dbopts['path'], '/') .

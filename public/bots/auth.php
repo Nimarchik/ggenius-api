@@ -2,7 +2,7 @@
 header("Content-Type: application/json");
 
 // === Подключение к базе через DATABASE_URL Render ===
-$dbUrl = getenv('DATABASE_URL');
+$dbUrl = getenv('DATABASE_URL'); //getenv('DATABASE_URL')
 if (!$dbUrl) exit(json_encode(['error' => 'DATABASE_URL не настроен']));
 
 $dbopts = parse_url($dbUrl);
@@ -13,7 +13,7 @@ $conn = pg_connect(
 if (!$conn) exit(json_encode(['error' => 'Не удалось подключиться к БД']));
 
 // === Telegram Bot Token ===
-$bot_token = getenv('BOT_TOKEN');
+$bot_token = getenv('BOT_TOKEN'); //getenv('BOT_TOKEN')
 if (!$bot_token) exit(json_encode(['error' => 'BOT_TOKEN не настроен']));
 
 // === JWT secret ===
@@ -105,6 +105,6 @@ pg_query_params(
 );
 
 // Редирект на фронт
-$frontend = getenv('FRONTEND_URL') ?: 'https://ggenius.gg/Home';
+$frontend =  getenv('FRONTEND_URL') ?: 'https://ggenius.gg/Home';
 header("Location: {$frontend}?access={$accessToken}&refresh={$refreshToken}");
 exit;
