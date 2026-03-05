@@ -18,7 +18,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Копируем проект внутрь контейнера
-COPY . .
+COPY ./public /var/www/html
 
 # Устанавливаем зависимости
 RUN composer install --no-dev --optimize-autoloader
