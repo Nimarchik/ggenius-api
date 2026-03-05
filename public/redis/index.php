@@ -1,38 +1,63 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Headers: Authorization, Content-Type");
 
-$redis = new Redis();
-
-$redis_url = getenv('REDIS_URL');
-$parts = parse_url($redis_url);
-
-$host = $parts['host'];
-$port = $parts['port'];
-$password = $parts['pass'] ?? null;
-$db = isset($parts['path']) ? ltrim($parts['path'], '/') : 0;
-
-if (!$redis->connect($host, $port)) {
-  http_response_code(500);
-  echo json_encode(["error" => "Не удалось подключиться к Redis"]);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
   exit;
 }
 
-if ($password) {
-  $redis->auth($password);
+require __DIR__ . '/vendor/autoload.php';
+
+// Берём URL из переменной окружения или задаём вручную
+$dbUrl = getenv('DATABASE_URL') ?: 'postgres://ufk3frgco7l9d1:p7aad477be5e7c084f8d9c2e9998fdfd75ed3eb573c808a6b3db95bbdb221b234@ccaml3dimis7eh.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com:5432/d7rglea9jc6ggd';
+
+// Разбираем URL
+$parts = parse_url($dbUrl);
+
+$host = $parts['host'];
+$user = $parts['user'];
+$pass = $parts['pass'] ?? '';
+$dbname = ltrim($parts['path'], '/');
+$port = $parts['port'] ?? 5432;
+
+// Подключение к PostgreSQL через PDO
+try {
+  $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+  $db = new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+  ]);
+} catch (PDOException $e) {
+  die("Ошибка подключения к PostgreSQL: " . $e->getMessage());
 }
 
-$redis->select((int)$db);
+// Подключение к Redis через URL
+$redisUrl = getenv('REDIS_URL') ?: 'redis://default:7S4SIp5IRoUuYlYkjnLhas3j58NgA4Kc@redis-14211.c269.eu-west-1-3.ec2.redns.redis-cloud.com:14211';
+$redis = new Predis\Client($redisUrl);
 
-$it = 0;
-$data = [];
+// Ключ для кэша
+$cacheKey = "lesha:shop_packages";
 
-do {
-  $keys = $redis->scan($it);
-  if ($keys !== false) {
-    foreach ($keys as $key) {
-      $data[$key] = $redis->get($key);
-    }
-  }
-} while ($it !== 0);
+// Проверяем кэш
+$cachedData = $redis->get($cacheKey);
 
-echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+if ($cachedData) {
+  header('Content-Type: application/json');
+  echo $cachedData;
+  exit;
+}
+
+// Если нет в кэше → идём в базу
+$table = $_GET['table'] ?? 'shop_packages';
+$stmt = $db->query("SELECT * FROM \"$table\"");
+$data = $stmt->fetchAll();
+
+// Сохраняем в Redis на 5 минут
+$redis->setex($cacheKey, 300, json_encode($data));
+
+// Отдаём клиенту
+header('Content-Type: application/json');
+echo json_encode($data);
