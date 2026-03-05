@@ -1,6 +1,6 @@
 <?php
 header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: https://ggenius.gg");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Authorization, Content-Type");
 
@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require __DIR__ . '/vendor/autoload.php';
 
 // Берём URL из переменной окружения или задаём вручную
-$dbUrl = getenv('DATABASE_URL') ?: 'postgres://ufk3frgco7l9d1:p7aad477be5e7c084f8d9c2e9998fdfd75ed3eb573c808a6b3db95bbdb221b234@ccaml3dimis7eh.cluster-czz5s0kz4scl.eu-west-1.rds.amazonaws.com:5432/d7rglea9jc6ggd';
+$dbUrl = getenv('DATABASE_URL');
 
 // Разбираем URL
 $parts = parse_url($dbUrl);
@@ -35,7 +35,7 @@ try {
 }
 
 // Подключение к Redis через URL
-$redisUrl = getenv('REDIS_URL') ?: 'redis://default:7S4SIp5IRoUuYlYkjnLhas3j58NgA4Kc@redis-14211.c269.eu-west-1-3.ec2.redns.redis-cloud.com:14211';
+$redisUrl = getenv('REDIS_URL');
 $redis = new Predis\Client($redisUrl);
 
 // Ключ для кэша
