@@ -1,6 +1,10 @@
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
+
 FROM php:8.2-apache
 
-# Устанавливаем нужные пакеты и расширения PHP
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libpq-dev \
@@ -11,20 +15,9 @@ RUN apt-get update && apt-get install -y \
  && pecl install redis \
  && docker-php-ext-enable redis
 
-# Устанавливаем Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Устанавливаем рабочую директорию
 WORKDIR /var/www/html
 
-# Спочатку копіюємо composer.json і composer.lock
-COPY composer.json composer.lock ./
-
-# Встановлюємо залежності
-RUN composer install --no-dev --optimize-autoloader
-
-# Потім копіюємо весь код з public
 COPY ./public /var/www/html
+COPY --from=vendor /app/vendor ./vendor
 
-# Apache уже настроен в php:8.2-apache, поэтому просто экспонируем порт
 EXPOSE 80
