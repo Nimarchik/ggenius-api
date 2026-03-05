@@ -17,11 +17,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Устанавливаем рабочую директорию
 WORKDIR /var/www/html
 
-# Копируем проект внутрь контейнера
-COPY ./public /var/www/html
+# Спочатку копіюємо composer.json і composer.lock
+COPY composer.json composer.lock ./
 
-# Устанавливаем зависимости
+# Встановлюємо залежності
 RUN composer install --no-dev --optimize-autoloader
+
+# Потім копіюємо весь код з public
+COPY ./public /var/www/html
 
 # Apache уже настроен в php:8.2-apache, поэтому просто экспонируем порт
 EXPOSE 80
